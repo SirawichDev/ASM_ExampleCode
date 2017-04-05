@@ -1,0 +1,54 @@
+%include "io.inc" 
+
+extern printf ; ทำการinclude คำสั่ง ของ printf 
+
+section .text ;สว่นของการเขียน Code
+global CMAIN 
+CMAIN:
+    push ebp ;นำค่า ebp ใส่ลงใน stack 
+    mov ebp, esp ;ให้ตัวแปร ebp ชี้ไปยัง esp
+    mov ch, 1 ;ให้ register ch มีค่าเท่ากับ 1    
+     
+  outer_loop:
+    cmp ch, 6 ;ทำการเปรียบเทียบ register ch กับ ค่า 6
+    jge exit_outer_loop ;ถ้า register ch มีค่ามากกว่าหรือเท่ากับ 6 ให้ทำการจั้มไปที่ 
+                        ;ฟังค์กชั่น exit_outer_loop 
+    
+    xor cl, cl ;กำหนดให้ค่า ของ register cl มีค่าเท่ากัย 0โดยการใช้คำสั่ง xor
+               ; xor ค่าเหมือนกันเท่ากัย 0
+     
+  inner_loop: ; นิยามฟังค์ชั่น ชื่อ inner_loop <Label>
+    cmp cl,ch  ;ทำการเปรียบเทียบ ค่าของ register cl และ ch      
+    jge exit_inner_loop ;ถ้าค่าของ register cl มากว่าหรือเท่ากับ ch จะให้ทำการ
+                        ;กระโดด ไปยัง exit_inner_loop
+
+    pusha ;นำตัวแปรทั้งหมดลง ใน stack <ป้องกันการการเกิด BUG >
+    push star  ;push star ลงไปใน stack        
+    call printf ;ทำการเรียกใช้คำสั่ง printf เพื่อแสดงผล
+    add esp, 4 ;
+    popa ;ดึงคำสั่งที่ push มาใช้ 
+
+    inc cl ;เพิ่มค่าของ register cl + 1             
+    jmp inner_loop ;ทำการกระโดด ไปยังฟังค์ชั่น inner_loop
+  exit_inner_loop: ; นิยามฟังค์ชั่น ชื่อ exit_inner_loop <Label>
+    
+    pusha ;นำตัวแปรทั้งหมดลง ใน stack <ป้องกันการการเกิด BUG >
+    push nl ;ทำการนำตัวแปร nl ใส่ลงไปใน stack nl = \n             
+    call printf ;ทำการเรียกใช้คำสั่ง printf 
+    add esp, 4 ;ทำการ
+    popa
+    
+    inc ch             
+    jmp outer_loop     
+  exit_outer_loop: ;นิยามฟังค์ชั่น ชื่อ exit_outer_loop <Label>
+    
+    mov esp, ebp ;ให้ esp ชี้ค่าไปยัง ebp 
+    pop ebp ;pop ค่า ebp ที่เก็บไว้ในstack     
+    
+    xor eax, eax ;ให้ register eax มีค่าเป้น 0
+    ret ;ทำการจบฟังค์ชั่น main <return >
+
+section .data ;ส่วนการกำหนดข้อมูลให้แต่ละตัวแปร
+    star: db "*", 0 ;ทำการ กำหนดให้ตัวเปรstarมีค่าเป็น byte โดยทำการจองพื้นที่ 1 byte
+    nl:   db 0xA, 0 ;ทำการ กำหนกให้ตัวแปร nl มีค่าเป็น byte โดยทำการจองพื้นที่ 1 byte
+                    ; 0xA เท่ากับ ขึ้นบรรทัดใหม่

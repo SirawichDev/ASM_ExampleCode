@@ -1,0 +1,65 @@
+%include "io.inc"
+section .data ;เป็นการบอกที่อยู่ตำแหน่งหรือข้อมูลที่ถูกเก็บไว้สำหรับโปรแกรม
+    display: db "%d", 0 ;  display มีชนิดตัวแปร เป็น float เก็บตัวเดียว <allocates 1 byte>
+    int_num: dd -999,6,9,-2,46,4,58,0,3,1 ;ทำการกำหนดค่าให้กับ ตัวแปร int_num ให้เป็น array
+                                          ;มีการกำหนดเป็น <double word>
+section .text
+global CMAIN
+CMAIN:
+    
+    mov eax,0    
+    mov ebx,0    
+    loop: 
+        mov ecx,int_num ;ให้ ecxมีค่าเท่ากับ int_num
+        cmp eax,10 ;เปรียบเทียบจำนวนค่าที่รับเข้ามาทั้งหมดมี 10 ค่าแล้วหรือไม่
+            je set_value ;ถ้า register eax มีจำนวน input เท่ากับใท้ทำการกระโดด ไปยังฟังค์ชั่น set_value
+        mov edi,[ecx] ;ให้ edi มีค่าเท่ากับ ค่าของ register ecx ตำแหน่งปัจจุบัน
+        mov esi,[ecx+8] ;ให้ register ecx ตำแหน่งถัดไป
+        mov ebx,1 ;ให้ ค่า register ebx มีค่าเท่ากับ 1 
+        
+        bub_Sort_i_loop: 
+            cmp ebx,10 ;ทำการเปรียบเทียบว่า ebx มีค่าเท่ากับ 10 หรือไม่
+                je add_loop ;ถ้ามมีค่าเท่ากับ 10 ให้ทำการกระโดดไปยังฟังค์ชั่น add_loop 
+            mov edi,[ecx] ;ให้ ตัวชี้ index เท่ากับ ตำแหน่งของ ecxปัจจุบัน
+            mov esi,[ecx+4] ;ให้ esi ชี้ตำแหน่งไปยัง ตำแหน่งถนัดไปของ ecx
+            cmp edi,esi ;ทำการเปรียบเทียบค่าของตำแหน่งของ edi และ esi
+                jl bub_Sort_j_loop ;ถ้า edi น้อยกว่า esi ให้ทำการกระโดดไปยังฟังค์ชั่น bub_Sort_j_loop 
+            mov edx,edi ;กำหนดไห้ register edx มีค่าเท่ากับ edi 
+            mov [ecx],esi ;กำหนดให้ตำแหน่งปัจจุบันของ ecx มีค่าเท่ากับ esi 
+            mov [ecx+4],edx ;กำหนดให้ตำแหน่งวถัดไปของ ecx มีค่าเท่ากับ edx
+            jmp bub_Sort_j_loop ;ทำการกระโดดไปยัง ฟังค์ชั่น bub_Sort_j_loop
+        
+        add_loop: 
+            inc eax ;เพิ่มค่าของ register eax +=1 
+            jmp loop 
+        bub_Sort_j_loop: 
+            add ecx,4 ;เพิ่ม ค่า 4 ลงไปใน register ecx
+            inc ebx ;ทำการเพิ่มค่า register ebx +=1
+            jmp bub_Sort_i_loop ;กระโดดไปยังฟังค์ชั่น bub_Sort_i_loop
+            
+    end:
+    
+mov eax,0 ;กำหนดให้ register eax มีค่าเท่ากับ 0
+set_value: 
+    mov ecx,int_num ;กำหนดให้ ecx มีค่าเท่ากับ num 
+    mov eax,0 ; กำหนดให้ eax มีค่าเท่ากับ 0
+print:  
+    cmp eax,10 ;ทำการตรวจสอบว่า eax มีค่าเท่ากับ 10 หรือไม่
+        je endprint ;ถ้าเท่ากับ10 ให้ทำการ กระโดดไปยัง ฟังก์ชั่น endprint
+    mov ebx,[ecx] ; ให้ ebx มีค่าเท่ากับ ตำแหน่งปัจจุบันของ ecx
+    mov dword[int_num],ebx ;นำค่า ebx ใส่ในค่าในตัวแปร num ที่ load ไว้
+             
+    pusha ;push ทุกอย่างลง stack <ป้องกันการเกิด BUG>
+        
+        push dword[int_num] ;load ตำแหน่งของ ตัวแปร num
+        push display ;กำหนดชนิดตัวแปรที่แสดงออกมาจาก num แต่ละตัวมีชนิดเป็น integer
+          call printf ;เรียกใช้คำสั่ง printf เพื่อแสดงผลลัพธ์ออกทางหน้าจอ
+          add esp, 8 ;ทำการสำรองค่าของผลลพัธ์ไว้ใน stack
+        popa ;pop ทุกอย่างออกมาใช้
+        add ecx,4 ;ทำการสำรองค่าของ ecx ไว้ใน stack
+        PRINT_CHAR "," ;ให้แสดง "," ออกระหว่างตัวเลขอื่นๆที่แสดงออกมา
+        inc eax ;ทำการเพิ่มค่าให้กับ register eax += 1
+        jmp print ;กระโดดไปยังฟังค์ชั่น print
+endprint:    
+    xor eax, eax ;ให้ register eax มีค่าเท่ากับ 0 โดยนำมา xor กัน
+    ret ;จบการทำงาน <return >

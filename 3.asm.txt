@@ -1,0 +1,34 @@
+%include "io.inc"
+extern printf
+extern scanf
+section .data
+    M: db "%f",0 ;กำหนดให้ตัวแปร M มีชนิดตัวแปร เป้น float เก็บตัวเดียว <allocates 1 byte>
+    F: db "F = %.2f", 0xA ,0 ;ตัวแปรใช้แสดงค่า แล้วทำการ <เว้นบรรทัด 0xA> <allocates 1 byte>
+    a: dq 0x411ccccd ; 0x411ccccd เป็น Hexadecimal จาก มาตรฐาน IEE754 
+                     ;a = 9.8 เป็นค่าคงที่ <allocates 8 bytes>
+
+section .bss
+    Mass: resd 1 ;ทำการจองพื้นที่ให้ตัวตัวแปร Mass โดยจองเป็น doubleword
+    result: resq 1 ;ทำสำรองพื้นที่ให้ตัวตัวแปร result โดยจองเป็น Quadword
+    
+section .text
+global CMAIN
+CMAIN:
+    push Mass;
+    push M
+    call scanf ;ทำการเรียกใช้คำสั่ง scanfเพื่อเก็บค่าของ Mass
+    add esp, 8 ;เก็บค่าที่ scanf ไว้ใน stack
+
+    fld dword[Mass]   ; โหลดค่าของ Mass ออกมา
+    fmul  dword[a]  ; แล้วทำการ คุณด้วย a ที่ได้ทำการโหลดออกมา
+    fst  qword[result] ; ทำการเก้บผลลัพธ์ ของตัวแปรทศนิยม
+
+    sub esp, 8    ;จอง stack สำหรับผลลัพธ์
+    fld  qword[result] ;โหลดค่าของ result ออกมา
+    fstp qword[esp] ; push result ลงไปใน stack
+    push  F ;push F เพื่อให้ result มีชนิดตัวแปรเป็น float
+    call  printf ;ทำการเรียกใช้คำสั่ง printf เพื่อแสดงผลลพัพธ์ออกทางหน้าจอ
+    add esp, 12   ; ทำการ clear ตัวแปรใน stack
+    
+    xor eax, eax ;set ให้ register eax มีค่าาเป็น 0 โดยการ xor กัน <ค่า เท่ากันได้ 0>
+    ret ;จบการทำงาน
